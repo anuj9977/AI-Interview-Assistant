@@ -1,0 +1,87 @@
+# =========================
+# 📦 Dependencies
+# =========================
+node_modules/
+**/node_modules/
+
+# ❌ DO NOT ignore lockfiles (important for consistency)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+
+# =========================
+# 🔐 Environment Variables
+# =========================
+.env
+.env.local
+.env.development
+.env.production
+!.env.example
+
+
+# =========================
+# 🏗️ Build / Dist
+# =========================
+dist/
+build/
+backend/dist/
+backend/build/
+frontend/dist/
+
+
+# =========================
+# 🧪 Testing / Coverage
+# =========================
+coverage/
+**/coverage/
+.nyc_output/
+*.lcov
+
+
+# =========================
+# 📜 Logs
+# =========================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# =========================
+# ⚙️ Runtime files
+# =========================
+pids
+*.pid
+*.seed
+*.pid.lock
+
+
+# =========================
+# 💻 OS Files
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+
+
+# =========================
+# 🧑‍💻 Editor / IDE
+# =========================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+
+# =========================
+# 🔥 Misc
+# =========================
+*.log
