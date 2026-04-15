@@ -1,7 +1,9 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { z } = require("zod");
 const { zodToJsonSchema } = require("zod-to-json-schema");
+const puppeteer = require('puppeteer');
 require("dotenv").config();
+
 
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY);
@@ -133,7 +135,7 @@ async function generateInterviewReport({ jobDescription, resume, selfDescription
       const response = await result.response;
       const text = response.text();
 
-      console.log("RAW:", text);
+      // console.log("RAW:", text);
 
       // 🔥 CLEAN TEXT
       const cleaned = text
@@ -167,4 +169,123 @@ async function generateInterviewReport({ jobDescription, resume, selfDescription
   }
 }
 
-module.exports = { invokeGeminiAi, generateInterviewReport };
+async function generateResumePdf({ resume, selfDescription, jobDescription }) {
+
+
+  const resumePdfSchema = {
+    type: "object",
+    properties: {
+      html: {
+        type: "string",
+        description: "A complete, well-structured HTML document for a professional resume/interview report. Must include inline CSS styling and proper formatting (headings, sections, lists)."
+      }
+    },
+    required: ["html"]
+  };
+  const prompt1 = `
+Generate a professional ATS-friendly resume based on the following:
+
+Job Description: ${jobDescription}
+Self Description: ${selfDescription}
+Resume: ${resume}
+
+STRICT INSTRUCTIONS:
+- Return ONLY valid JSON
+- Do NOT return markdown
+- Do NOT add explanation
+- Follow this exact format:
+
+{
+  "html": "<complete HTML document>"
+}
+
+HTML REQUIREMENTS:
+- Must include <html>, <head>, <body>
+- Use inline CSS only
+- Sections: Name, Summary, Skills, Experience, Education
+- Clean, professional layout
+- Content should sound human-written, not AI-generated
+- Keep it concise (1-2 pages max)
+`;
+
+
+
+  const modelsToTry = ["gemini-3-flash-preview", "gemini-1.5-flash"];
+
+  let lastError;
+
+  for (const modelName of modelsToTry) {
+    try {
+      console.log(`Trying ${modelName}`);
+
+      const model = genAI.getGenerativeModel({ model: modelName });
+
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt1 }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: resumePdfSchema
+        }
+      });
+
+      const response = await result.response;
+      const text = response.text();
+
+      console.log("RAW:", text);
+
+      // 🔥 Clean JSON (safety)
+      const cleaned = text
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (err) {
+        console.error("JSON Parse Error:", cleaned);
+        throw new Error("Invalid AI JSON");
+      }
+
+      // 🔥 Puppeteer
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+
+      await page.setContent(parsed.html, {
+        waitUntil: "networkidle0"
+      });
+
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        margin: {
+          top: "20mm",
+          bottom: "20mm",
+          left: "15mm",
+          right: "15mm"
+        }
+      });
+
+      await browser.close();
+
+      return pdfBuffer;
+
+    } catch (error) {
+      lastError = error;
+
+      if (
+        error.message.includes("503") ||
+        error.message.includes("404") ||
+        error.message.includes("429")
+      ) {
+        console.warn(`${modelName} failed, trying next...`);
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw lastError || new Error("All models failed");
+}
+
+module.exports = { invokeGeminiAi, generateInterviewReport, generateResumePdf };
