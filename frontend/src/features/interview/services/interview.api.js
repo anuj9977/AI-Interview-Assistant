@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000',
+    baseURL: 'https://ai-interview-assistant-u5b2.onrender.com',
     withCredentials: true,
 });
 
@@ -27,4 +27,11 @@ export const getInterviewReportById = async (interviewId) => {
 export const getAllInterviewReports = async () => {
     const response = await api.get('/api/interview/');
     return response.data;
+}
+
+export const generateResumePdf =async({interviewReportId})=>{
+    const response=await api.post(`/api/interview/resume/pdf/${interviewReportId}`,null,{
+        responseType:"blob"
+    })
+    return response.data
 }

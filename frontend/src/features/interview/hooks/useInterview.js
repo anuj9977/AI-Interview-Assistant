@@ -1,4 +1,4 @@
-import { getAllInterviewReports,getInterviewReportById,generateInterviewReport } from "../services/interview.api";
+import { getAllInterviewReports, getInterviewReportById, generateInterviewReport, generateResumePdf } from "../services/interview.api";
 import { useContext } from "react";
 import { InterviewContext } from "../interview.context.jsx";
 
@@ -10,16 +10,16 @@ export const useInterview = () => {
     }
     const { loading, setLoading, report, setReport, reports, setReports } = context;
 
-    const generateReport = async ({jobDescription,selfDescription,resumeFile}) => {
+    const generateReport = async ({ jobDescription, selfDescription, resumeFile }) => {
         setLoading(true);
-        let data=null;
+        let data = null;
         try {
-             data = await generateInterviewReport({jobDescription,selfDescription,resumeFile});
+            data = await generateInterviewReport({ jobDescription, selfDescription, resumeFile });
             setReport(data.interviewReport);
         }
         catch (error) {
             console.error("Error generating interview report:", error);
-        }finally {
+        } finally {
             setLoading(false);
         }
         return data?.interviewReport;
@@ -27,9 +27,9 @@ export const useInterview = () => {
 
     const getReportById = async (interviewId) => {
         setLoading(true);
-        let data=null;
+        let data = null;
         try {
-             data = await getInterviewReportById(interviewId);
+            data = await getInterviewReportById(interviewId);
             setReport(data.interviewReport);
         }
         catch (error) {
@@ -39,12 +39,12 @@ export const useInterview = () => {
             setLoading(false);
         }
         return data?.interviewReport;
-        }
+    }
     const getAllReports = async () => {
         setLoading(true);
-        let data=null;
+        let data = null;
         try {
-             data = await getAllInterviewReports();
+            data = await getAllInterviewReports();
             setReports(data.interviewReports);
         }
         catch (error) {
@@ -55,6 +55,31 @@ export const useInterview = () => {
         }
         return data?.interviewReports;
     }
-    return { loading, report, reports, generateReport, getReportById, getAllReports };
+    const getResumePdf = async (interviewReportId) => {
+        setLoading(true);
+
+        try {
+            const response = await generateResumePdf({ interviewReportId });
+
+            // 🔥 correct blob
+            const url = window.URL.createObjectURL(
+                new Blob([response], { type: "application/pdf" })
+            );
+
+            const link = document.createElement("a");
+            link.href = url; // ✅ IMPORTANT
+            link.setAttribute("download", `resume_${interviewReportId}.pdf`);
+
+            document.body.appendChild(link);
+            link.click();
+
+            link.remove(); // optional cleanup
+        } catch (err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+    return { loading, report, reports, generateReport, getReportById, getAllReports, getResumePdf };
 }
 

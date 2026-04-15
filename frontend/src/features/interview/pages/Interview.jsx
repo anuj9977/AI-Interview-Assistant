@@ -42,7 +42,7 @@ const QuestionCard = ({ item, index }) => {
 const RoadMapDay = ({ day }) => (
     <div className='roadmap-day'>
         <div className='roadmap-day__header'>
-            <span className='roadmap-day__badge'>Day {day.day}</span>
+            <span className='roadmap-day__badge'>{day.day}</span>
             <h3 className='roadmap-day__focus'>{day.focus}</h3>
         </div>
         <ul className='roadmap-day__tasks'>
@@ -61,7 +61,7 @@ const Interview = () => {
     const [ activeNav, setActiveNav ] = useState('technical')
     const { report, getReportById, loading, getResumePdf } = useInterview()
     const { interviewId } = useParams()
-    console.log(report);
+    
 
     useEffect(() => {
         if (interviewId) {

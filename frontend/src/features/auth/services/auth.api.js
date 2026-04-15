@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api=axios.create({
-    baseURL:'http://localhost:5000',
+    baseURL:'https://ai-interview-assistant-u5b2.onrender.com',
     withCredentials:true
 });
 
