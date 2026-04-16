@@ -1,12 +1,4 @@
-import axios from "axios";
-
-const api = axios.create({
-    baseURL: 'https://ai-interview-assistant-u5b2.onrender.com',
-    withCredentials: true,
-     headers: {
-        "Content-Type": "application/json",
-    },
-});
+import { api } from "../../../services/api.js";
 
 export const generateInterviewReport = async ({jobDescription,selfDescription,resumeFile}) => {
     const formData = new FormData();

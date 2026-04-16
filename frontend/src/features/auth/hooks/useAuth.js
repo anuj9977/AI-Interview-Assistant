@@ -1,6 +1,7 @@
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '../auth.context.jsx';
 import { login, register, logout, getMe } from '../services/auth.api.js';
+import { setStoredToken } from '../../../services/api.js';
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -15,8 +16,11 @@ export const useAuth = () => {
             setLoading(true);
             const data = await login({ email, password });
             setUser(data.user);
+            return data;
         }
         catch (error) {
+            setUser(null);
+            throw error;
         }
         finally {
             setLoading(false);
@@ -28,8 +32,11 @@ export const useAuth = () => {
             setLoading(true);
             const data = await register({ username, email, password });
             setUser(data.user);
+            return data;
         }
         catch (error) {
+            setUser(null);
+            throw error;
         }
         finally {
             setLoading(false);
@@ -41,8 +48,10 @@ export const useAuth = () => {
             setLoading(true);
             await logout();
             setUser(null);
+            return true;
         }
         catch (error) {
+            throw error;
         }
         finally {
             setLoading(false);
@@ -63,6 +72,7 @@ export const useAuth = () => {
                     }
                 } catch (error) {
                     console.error("Auth error:", error.message);
+                    setStoredToken(null);
                     setUser(null); // Error aane par user ko null set karein
                 } finally {
                     // Yeh hamesha chalega, chahe success ho ya error

@@ -3,6 +3,17 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const blacklistModel = require('../models/blacklist.model');
 
+const getCookieOptions = () => {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    return {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    };
+};
+
 
 
 const registerUser = async (req, res) => {
@@ -31,11 +42,7 @@ console.log('Content-Type:', req?.get('Content-Type') || 'none');
         const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false, // production me true
-            sameSite: "lax"
-        });
+        res.cookie("token", token, getCookieOptions());
         res.status(201).json({ message: 'User registered successfully', user: { id: newUser._id, username: newUser.username, email: newUser.email }, token });
 
 
@@ -66,11 +73,7 @@ const { email, password } = req.body;
         }
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: false, // production me true
-            sameSite: "lax"
-        });
+        res.cookie("token", token, getCookieOptions());
         res.status(200).json({ message: 'User logged in successfully', user: { id: user._id, username: user.username, email: user.email }, token });
     }
     catch (err) {
@@ -80,7 +83,10 @@ const { email, password } = req.body;
 }
 
 const logoutUser = async (req, res) => {
-    const token = req.cookies.token;
+    const bearerToken = req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.split(' ')[1]
+        : null;
+    const token = req.cookies.token || bearerToken;
     console.log(req.cookies);
 if (!token) {
         return res.status(400).json({ message: 'Token is not provided' });
@@ -88,7 +94,7 @@ if (!token) {
     try {
         const blacklistToken = new blacklistModel({ token });
         await blacklistToken.save();
-        res.clearCookie('token');
+        res.clearCookie('token', getCookieOptions());
         res.status(200).json({ message: 'User logged out successfully' });
     }
     catch (err) {

@@ -2,7 +2,10 @@ const jwt =require('jsonwebtoken');
 const blacklistModel=require('../models/blacklist.model.js');
 
 async function authUser  (req,res,next){
-    const token=req.cookies.token;
+    const bearerToken = req.headers.authorization?.startsWith('Bearer ')
+        ? req.headers.authorization.split(' ')[1]
+        : null;
+    const token = req.cookies.token || bearerToken;
     if(!token){
         return res.status(401).json({message:'No token provided'});
     }

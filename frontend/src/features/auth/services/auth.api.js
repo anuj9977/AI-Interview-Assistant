@@ -1,9 +1,4 @@
-import axios from 'axios';
-
-const api=axios.create({
-    baseURL:'https://ai-interview-assistant-u5b2.onrender.com',
-    withCredentials:true
-});
+import { api, setStoredToken } from "../../../services/api.js";
 
 export async function register({username,email,password}){ 
    try{
@@ -12,6 +7,7 @@ export async function register({username,email,password}){
         email,
         password
     });
+    setStoredToken(response.data?.token);
     return response.data;
    }
    catch(error){
@@ -27,10 +23,12 @@ export async function login({email,password}){
             email,
             password
         })
+        setStoredToken(response.data?.token);
         return response.data;
 
     }catch(error){
         console.error('Login error:', error);
+        throw error;
     }
 }
 
@@ -38,9 +36,11 @@ export async function logout(){
     try{
         const response=await api.get('/api/auth/logout',{
         })
+        setStoredToken(null);
         return response.data;
     }catch(error){
         console.error('Logout error:', error);
+        throw error;
     }
 }
 
@@ -51,5 +51,6 @@ export async function getMe(){
         return response.data;
     }catch(error){
         console.error('Get Me error:', error);
+        throw error;
     }
 }
